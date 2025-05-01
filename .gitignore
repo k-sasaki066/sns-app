@@ -1,0 +1,15 @@
+# Laravel
+sns-app-laravel/vendor/
+sns-app-laravel/node_modules/
+sns-app-laravel/.env
+sns-app-laravel/storage/
+sns-app-laravel/bootstrap/cache/
+
+# Nuxt
+sns-app-nuxt/.output/
+sns-app-nuxt/.nuxt/
+sns-app-nuxt/node_modules/
+sns-app-nuxt/.env
+
+# OS関連
+.DS_Store
