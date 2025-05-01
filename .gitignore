@@ -13,3 +13,7 @@ sns-app-nuxt/.env
 
 # OS関連
 .DS_Store
+
+/docker/mysql/data/*
+# ただし .gitkeep は除外（追跡対象にする）
+!/docker/mysql/data/.gitkeep
