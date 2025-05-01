@@ -1,0 +1,37 @@
+.form-container {
+    width: 500px;
+    margin: 100px auto;
+    background-color: #fff;
+    text-align: center;
+    padding: 28px 48px;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.form-group {
+    flex-direction: column;
+    gap: 28px;
+    width: 100%;
+}
+
+.form-header {
+    font-size: 1.2em;
+}
+
+.form-group__item {
+    width: 100%;
+}
+
+.form-group__item-input {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+}
+
+.form-btn {
+    display: inline-block;
+    align-self: center;
+    background-color: #5419D9;
+    padding: 12px 28px;
+    border-radius: 9999px;
+}
