@@ -5,5 +5,8 @@ export default defineNuxtConfig({
 
   ssr: false,
 
-  css: ['~/assets/css/common.css']
+  css: [
+    '~/assets/css/reset.css',
+    '~/assets/css/common.css',
+  ]
 })
