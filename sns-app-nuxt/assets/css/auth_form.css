@@ -14,7 +14,8 @@
     width: 100%;
 }
 
-.form-header {
+.form-header,
+.home-ttl {
     font-size: 1.2em;
 }
 
@@ -22,7 +23,9 @@
     width: 100%;
 }
 
-.form-group__item-input {
+.form-group__item-input,
+.post-form__textarea,
+.comment-form__textarea {
     width: 100%;
     padding: 14px;
     border-radius: 12px;

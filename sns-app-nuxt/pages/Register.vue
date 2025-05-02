@@ -5,7 +5,7 @@
             <h1 class="form-header">新規登録</h1>
             <form class="form-group flex">
                 <div class="form-group__item">
-                    <input class="form-group__item-input" type="text" name="name" value="" placeholder="ユーザー名">
+                    <input class="form-group__item-input" type="text" name="name" value="" placeholder="ユーザーネーム">
                     <div class="error-message">
                         
                     </div>
