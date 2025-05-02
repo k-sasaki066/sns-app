@@ -24,6 +24,10 @@ NuxtLink {
     display: flex;
 }
 
+.grid {
+    display: grid;
+}
+
 .white {
     color: #fff;
 }
@@ -48,7 +52,12 @@ NuxtLink {
     width: 180px;
 }
 
-.auth-header__img {
+.side-nav__img-wrap {
+    width: 120px;
+}
+
+.auth-header__img,
+.side-nav__img {
     width: 100%;
     height: 100%;
 }

@@ -1,0 +1,58 @@
+.side-nav__container {
+    height: 100vh;
+    border-right: 1px solid #fff;
+    padding: 18px;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.side-nav__img-wrap {
+    margin-left: 8px;
+}
+
+.post-form__ttl {
+    font-size: 1.1em;
+}
+
+.side-nav__list,
+.side-nav__logout-form {
+    align-items: center;
+}
+
+.side-nav__home-img-wrap,
+.side-nav__logout-img-wrap {
+    width: 32px;
+}
+
+.side-nav__list,
+.side-nav__logout-form {
+    gap: 24px;
+}
+
+.side-nav__logout-form {
+    margin-top: 12px;
+}
+
+.side-nav__logout-button {
+    background-color: #15202B;
+    border: none;
+    padding: 0;
+}
+
+.post-form {
+    flex-direction: column;
+    gap: 20px;
+}
+
+.post-form__input-group {
+    width: 100%;
+}
+
+.post-form__textarea {
+    border: 1px solid #fff;
+    background-color: #15202B;
+}
+
+.post-form-btn {
+    margin: 0 0 0 auto;
+}
