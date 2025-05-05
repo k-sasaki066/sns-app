@@ -13,7 +13,7 @@
                     ホーム
                 </NuxtLink>
             </div>
-            <form class="side-nav__logout-form flex" onsubmit="return confirm('ログアウトしますか？');">
+            <form class="side-nav__logout-form flex" @submit.prevent="handleLogout">
                 <div class="side-nav__logout-img-wrap">
                     <img class="side-nav__img" src="/icons/logout.png" alt="home">
                 </div>
@@ -38,4 +38,18 @@
 
 <script setup>
 import '~/assets/css/side_nav.css'
+
+import { useRouter } from 'vue-router'
+const router = useRouter()
+const { logout } = useAuth()
+
+const handleLogout = async () => {
+    if (!confirm('ログアウトしますか？')) return
+
+    try {
+        await logout()
+    } catch (e) {
+        console.error('ログアウトエラー:', e)
+    }
+}
 </script>
