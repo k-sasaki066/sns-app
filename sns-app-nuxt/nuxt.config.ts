@@ -8,5 +8,7 @@ export default defineNuxtConfig({
   css: [
     '~/assets/css/reset.css',
     '~/assets/css/common.css',
-  ]
+  ],
+
+  plugins: ['~/plugins/firebase.client.ts'],
 })
