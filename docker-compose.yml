@@ -15,6 +15,7 @@ services:
     build: ./docker/php
     volumes:
       - ./sns-app-laravel/src:/var/www/
+      - ./sns-app-laravel/src/firebase:/var/www/firebase
 
   mysql:
     image: mysql:8.0.26

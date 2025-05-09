@@ -4,6 +4,19 @@
 
 .home-ttl {
     padding: 22px;
+    border-bottom: 1px solid #fff;
+}
+
+.message-container {
+    width: 100%;
+    height: calc(100vh - 63px);
+    overflow-y: scroll;
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f1f1f1;
+}
+
+.loading-trigger {
+    height: 1px;
 }
 
 @media screen and (max-width: 959px) {

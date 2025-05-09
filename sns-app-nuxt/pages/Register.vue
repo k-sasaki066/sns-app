@@ -58,11 +58,11 @@ const { value: password } = useField('password')
 const { register } = useAuth()
 
 const handleRegister = async () => {
-  try {
-    await register(name.value, email.value, password.value)
-    alert('登録成功')
-  } catch (e) {
-    console.error(e)
-  }
+    try {
+        await register(name.value, email.value, password.value)
+        alert('登録成功')
+    } catch (e) {
+        console.error(e)
+    }
 }
 </script>
