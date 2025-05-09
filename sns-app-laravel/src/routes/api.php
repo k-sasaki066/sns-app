@@ -22,4 +22,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::middleware(['firebase.auth'])->group(function () {
     Route::get('/v1/posts', [MessageController::class, 'index']);
     Route::post('/v1/posts', [MessageController::class, 'store']);
+
+    Route::post('/v1/posts/{id}/like', [MessageController::class, 'toggleFavorite']);
 });

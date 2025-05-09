@@ -3,10 +3,10 @@
         <div class="message-inner flex">
             <p class="message__user-name">{{ message.user && message.user.name ? message.user.name : '匿名' }}</p>
             <div class="message__button-group flex">
-                <div class="message__favorite-img-wrap">
-                    <img class="message__favorite-img" src="/icons/heart.png" alt="heart">
-                </div>
-                <span class="message__favorite-count">100</span>
+                <button class="message__favorite-img-wrap" :disabled="message.isProcessing"  @click="toggleFavorite(message)">
+                    <img class="message__favorite-img" :src="message.is_liked ? '/icons/heart-filled.png' : '/icons/heart.png'" alt="heart">
+                </button>
+                <span class="message__favorite-count">{{ message.like_count }}</span>
                 <form class="message__delete-form" onsubmit="return confirm('このメッセージを削除しますか？');">
                     <button class="message__delete-form-button" type="submit">
                         <img class="message__delete-form-img" src="/icons/cross.png" alt="delete">
@@ -47,4 +47,30 @@ onMounted(() => {
 watch(() => props.messages, (newMessages) => {
     messages.value = newMessages
 })
+
+const toggleFavorite = async (message: any) => {
+    const wasLiked = message.is_liked
+
+    try {
+        message.isProcessing = true;
+        // クリック後にボタンを無効化
+
+        const res = await $axios.post(`/posts/${message.id}/like`, {
+            action: wasLiked ? 'unlike' : 'like'
+        })
+
+        if (res.data.success) {
+            // サーバーからのレスポンスを反映
+            message.is_liked = !wasLiked; // 状態を切り替え
+            message.like_count = res.data.like_count; // 新しいlike_countをセット
+        } else {
+            console.error('操作に失敗しました', res.data.message);
+        }
+    } catch (e) {
+        console.error('お気に入り切り替え失敗', e)
+    } finally {
+        // 処理完了後にボタンを再度有効化
+        message.isProcessing = false;
+    }
+}
 </script>

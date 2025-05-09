@@ -34,7 +34,8 @@
     height: 100%;
 }
 
-.message__delete-form-button {
+.message__delete-form-button,
+.message__favorite-img-wrap {
     background-color: #15202B;
     border: none;
     padding: 0;
