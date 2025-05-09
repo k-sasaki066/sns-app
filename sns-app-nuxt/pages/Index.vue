@@ -17,11 +17,18 @@ import '~/assets/css/index.css'
 import { ref, onMounted, nextTick } from 'vue'
 import Message from '~/components/Message.vue'
 import SideNav from '~/components/SideNav.vue'
+import { useRouter } from 'vue-router'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
 import { useInfiniteScroll } from '~/composables/useInfiniteScroll'
+import { useLoadingStore } from '~/stores/useLoadingStore'
 
 // Nuxt のプラグインで登録した axios を取得
 const { $axios } = useNuxtApp()
+
+// useRouter を使ってページ遷移を制御
+const router = useRouter()
+
+const loadingStore = useLoadingStore()
 
 const messages = ref<any[]>([]);
 const offset = ref(0)
@@ -31,6 +38,7 @@ const allLoaded = ref(false)
 const loader = ref<HTMLElement | null>(null)
 
 const fetchMessages = async () => {
+    loadingStore.setLoading(true)
     const auth = getAuth()
     const currentUser = auth.currentUser
     if (!currentUser) return
@@ -60,6 +68,7 @@ const fetchMessages = async () => {
         console.error('メッセージ取得に失敗しました', error)
     } finally {
         loading.value = false
+        loadingStore.setLoading(false)
     }
 }
 
@@ -77,7 +86,7 @@ onMounted(async () => {
             fetchMessages()
             // ユーザーがログインしている場合、メッセージを取得
         } else {
-            console.error('ログインしていません')
+            router.push('/login')
         }
     })
 
