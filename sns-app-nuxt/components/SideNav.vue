@@ -23,12 +23,12 @@
             </form>
         </nav>
 
-        <form class="post-form flex white">
+        <form class="post-form flex white" @submit.prevent="sendMessage">
             <h2 class="post-form__ttl">シェア</h2>
             <div class="post-form__input-group">
-                <textarea class="post-form__textarea white" name="text" rows="8"></textarea>
+                <textarea class="post-form__textarea white" rows="8" v-model="content"></textarea>
                 <div class="error-message">
-                    message
+                    <ErrorMessage name="content" />
                 </div>
             </div>
             <button class="form-btn white post-form-btn" type="submit">シェアする</button>
@@ -36,12 +36,32 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import '~/assets/css/side_nav.css'
-
+import { useField, useForm, Field, ErrorMessage } from 'vee-validate'
+import * as yup from 'yup'
 import { useRouter } from 'vue-router'
+import { getAuth } from 'firebase/auth'
+import { ref, onMounted } from 'vue'
+
+const { $axios } = useNuxtApp()
+
+const emit = defineEmits<{
+    (e: 'onMessagePosted', message: any): void
+}>()
 const router = useRouter()
 const { logout } = useAuth()
+
+const validationSchema = yup.object({
+    content: yup.string().required('投稿メッセージは必須です').max(120, '投稿メッセージは120文字以内で入力してください'),
+})
+
+const { resetForm } = useForm({
+    validationSchema,
+    validateOnMount: false
+})
+
+const { value: content } = useField('content')
 
 const handleLogout = async () => {
     if (!confirm('ログアウトしますか？')) return
@@ -50,6 +70,38 @@ const handleLogout = async () => {
         await logout()
     } catch (e) {
         console.error('ログアウトエラー:', e)
+    }
+}
+
+const sendMessage = async () => {
+    if (!content.value.trim()) return;
+
+    const auth = getAuth()
+    const currentUser = auth.currentUser
+
+    if (!currentUser) {
+        console.error('ユーザーがログインしていません')
+        return
+    }
+
+    try {
+        const idToken = await currentUser.getIdToken() // トークン取得
+        console.log('取得したトークン:', idToken)
+        
+        const res = await $axios.post('/posts', {
+            content: content.value,
+        }, {
+            headers: {
+                Authorization: `Bearer ${idToken}`,
+            },
+        })
+
+        const newMessage = res.data.message
+        resetForm()
+        emit('onMessagePosted', newMessage)
+
+    } catch (error) {
+        console.error('送信に失敗しました', error)
     }
 }
 </script>

@@ -2,21 +2,22 @@ import { initializeApp } from "firebase/app"
 import { getAuth } from "firebase/auth"
 import { getAnalytics } from "firebase/analytics";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyA8UIMsMy6xpjB0731QizfffEJvt_3veFw",
-    authDomain: "sns-app-41e20.firebaseapp.com",
-    projectId: "sns-app-41e20",
-    storageBucket: "sns-app-41e20.firebasestorage.app",
-    messagingSenderId: "793505736769",
-    appId: "1:793505736769:web:80f4c64528bbb94c337ec0",
-    measurementId: "G-B7XNMHMSBJ"
-}
-
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const auth = getAuth(app);
-
 export default defineNuxtPlugin(() => {
+    const config = useRuntimeConfig()
+
+    const firebaseConfig = {
+    apiKey: config.public.FIREBASE_API_KEY,
+    authDomain: config.public.FIREBASE_AUTH_DOMAIN,
+    projectId: config.public.FIREBASE_PROJECT_ID,
+    storageBucket: config.public.FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: config.public.FIREBASE_MESSAGING_SENDER_ID,
+    appId: config.public.FIREBASE_APP_ID,
+    }
+
+    const app = initializeApp(firebaseConfig)
+    const auth = getAuth(app)
+    const analytics = getAnalytics(app)
+
     return {
         provide: {
             auth
