@@ -34,6 +34,7 @@ class MessageController extends Controller
             ]);
 
             $message->load('user');
+            $message->user->uid = $message->user->firebase_uid;
 
             return response()->json([
                 'message' => $message->append(['like_count', 'is_liked'])
@@ -61,7 +62,10 @@ class MessageController extends Controller
                 ->append(['like_count', 'is_liked']);
 
             return response()->json([
-                'messages' => $messages
+                'messages' => $messages->map(function ($message) {
+                    $message->user->uid = $message->user->firebase_uid;
+                    return $message;
+                }),
             ]);
         } catch (Exception $e) {
             Log::error('Failed to fetch messages: ' . $e->getMessage());
@@ -115,6 +119,31 @@ class MessageController extends Controller
             DB::rollBack(); // エラー時にロールバック
             Log::error('Toggle Favorite Error: ' . $e->getMessage());
             return response()->json(['error' => 'Internal Server Error'], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $user = auth()->user();
+            $message = Post::findOrFail($id);
+
+            // メッセージの所有者と現在のユーザーが一致するか確認
+            if ($message->user_id !== $user->id) {
+                return response()->json(['error' => 'Forbidden'], 403); // 自分以外のメッセージは削除できない
+            }
+
+            $message->delete();
+
+            return response()->json(['success' => true]);
+        } catch (ModelNotFoundException $e) {
+            Log::warning('Message not found: ' . $e->getMessage());
+
+            return response()->json(['error' => 'Message not found'], 404);
+        } catch (Exception $e) {
+            Log::error('Message delete error: ' . $e->getMessage());
+
+            return response()->json(['error' => 'メッセージの削除中にエラーが発生しました'], 500);
         }
     }
 }
