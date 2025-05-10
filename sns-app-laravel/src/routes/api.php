@@ -24,4 +24,5 @@ Route::middleware(['firebase.auth'])->group(function () {
     Route::post('/v1/posts', [MessageController::class, 'store']);
 
     Route::post('/v1/posts/{id}/like', [MessageController::class, 'toggleFavorite']);
+    Route::delete('/v1/posts/{id}', [MessageController::class, 'destroy']);
 });

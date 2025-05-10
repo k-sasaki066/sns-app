@@ -7,11 +7,13 @@
                     <img class="message__favorite-img" :src="message.is_liked ? '/icons/heart-filled.png' : '/icons/heart.png'" alt="heart">
                 </button>
                 <span class="message__favorite-count">{{ message.like_count }}</span>
-                <form class="message__delete-form" onsubmit="return confirm('このメッセージを削除しますか？');">
-                    <button class="message__delete-form-button" type="submit">
-                        <img class="message__delete-form-img" src="/icons/cross.png" alt="delete">
-                    </button>
-                </form>
+                <div v-if="currentUser && message.user && message.user.uid === currentUser.uid">
+                    <form class="message__delete-form" @submit.prevent="deleteMessage(message)">
+                        <button class="message__delete-form-button" type="submit">
+                            <img class="message__delete-form-img" src="/icons/cross.png" alt="delete">
+                        </button>
+                    </form>
+                </div>
             </div>
             <div class="message__detail-button">
                 <NuxtLink class="message__detail-button-link">
@@ -26,7 +28,7 @@
 <script setup lang="ts">
 import '~/assets/css/message.css'
 import { computed, watch, ref, onMounted, defineProps } from 'vue'
-import { getAuth } from 'firebase/auth'
+import { getAuth, onAuthStateChanged } from 'firebase/auth'
 
 const { $axios } = useNuxtApp()
 
@@ -39,8 +41,16 @@ const messages = ref([...props.messages])
 const route = useRoute()
 const hideDetailButton = computed(() => route.path === '/posts')
 
+const currentUser = ref<{ uid: string } | null>(null)
+
 onMounted(() => {
     const auth = getAuth()
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            const user = auth.currentUser
+            currentUser.value = { uid: user.uid }
+        }
+    })
     props.fetchMessages()
 })
 
@@ -71,6 +81,18 @@ const toggleFavorite = async (message: any) => {
     } finally {
         // 処理完了後にボタンを再度有効化
         message.isProcessing = false;
+    }
+}
+
+const deleteMessage = async (message: any) => {
+    if (!confirm('このメッセージを削除しますか？')) return
+
+    try {
+        await $axios.delete(`/posts/${message.id}`)
+        // 即時UIから削除
+        messages.value = messages.value.filter(m => m.id !== message.id)
+    } catch (e) {
+        console.error('メッセージ削除失敗', e)
     }
 }
 </script>
