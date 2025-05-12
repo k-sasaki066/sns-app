@@ -16,7 +16,7 @@
                 </div>
             </div>
             <div class="message__detail-button">
-                <NuxtLink class="message__detail-button-link">
+                <NuxtLink :to="`/posts/${message.id}`" class="message__detail-button-link">
                     <img class="message__detail-button-img" src="/icons/detail.png" alt="detail">
                 </NuxtLink>
             </div>
@@ -29,6 +29,7 @@
 import '~/assets/css/message.css'
 import { computed, watch, ref, onMounted, defineProps } from 'vue'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
+import { useRouter } from 'vue-router'
 
 const { $axios } = useNuxtApp()
 
@@ -38,8 +39,8 @@ const props = defineProps<{
 }>()
 const messages = ref([...props.messages])
 
-const route = useRoute()
-const hideDetailButton = computed(() => route.path === '/posts')
+const router = useRouter()
+const hideDetailButton = computed(() => router.path === '/posts')
 
 const currentUser = ref<{ uid: string } | null>(null)
 
@@ -51,7 +52,6 @@ onMounted(() => {
             currentUser.value = { uid: user.uid }
         }
     })
-    props.fetchMessages()
 })
 
 watch(() => props.messages, (newMessages) => {
@@ -91,6 +91,7 @@ const deleteMessage = async (message: any) => {
         await $axios.delete(`/posts/${message.id}`)
         // 即時UIから削除
         messages.value = messages.value.filter(m => m.id !== message.id)
+        router.push('/')
     } catch (e) {
         console.error('メッセージ削除失敗', e)
     }
