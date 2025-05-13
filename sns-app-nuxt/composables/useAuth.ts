@@ -12,7 +12,7 @@ export const useAuth = () => {
     const cred = await createUserWithEmailAndPassword($auth, email, password)
     await updateProfile(cred.user, { displayName: name })
         user.value = cred.user
-        router.push('/login')
+        router.push('/')
     }
 
     const login = async (email: string, password: string) => {

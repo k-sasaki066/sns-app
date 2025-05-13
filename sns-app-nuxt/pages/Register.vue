@@ -26,8 +26,8 @@
                     </div>
                 </div>
 
-                <button class="form-btn white" type="submit">
-                    新規登録
+                <button class="form-btn white" type="submit" :disabled="isRunning">
+                    {{ isRunning ? '登録中...' : '新規登録' }}
                 </button>
             </form>
         </div>
@@ -39,6 +39,7 @@ import '~/assets/css/auth_form.css'
 import { useField, useForm, Field, ErrorMessage, } from 'vee-validate'
 import * as yup from 'yup'
 import { useAuth } from '~/composables/useAuth'
+import { useSingleClick } from '~/composables/useSingleClick'
 
 const validationSchema = yup.object({
     name: yup.string().required('ユーザーネームは必須です').max(20, 'ユーザーネームは20文字以内で入力してください'),
@@ -56,13 +57,16 @@ const { value: email } = useField('email')
 const { value: password } = useField('password')
 
 const { register } = useAuth()
+const { run, isRunning } = useSingleClick()
 
-const handleRegister = async () => {
-    try {
-        await register(name.value, email.value, password.value)
-        alert('登録成功')
-    } catch (e) {
-        console.error(e)
-    }
+const handleRegister = () => {
+    run(async () => {
+        try {
+            await register(name.value, email.value, password.value)
+            alert('登録成功')
+        } catch (e) {
+            console.error(e)
+        }
+    })
 }
 </script>

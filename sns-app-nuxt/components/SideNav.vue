@@ -31,7 +31,7 @@
                     <ErrorMessage name="content" />
                 </div>
             </div>
-            <button class="form-btn white post-form-btn" type="submit">シェアする</button>
+            <button class="form-btn white post-form-btn" type="submit" :disabled="isRunning">{{ isRunning ? '送信中...' : 'シェアする' }}</button>
         </form>
     </div>
 </template>
@@ -43,8 +43,10 @@ import * as yup from 'yup'
 import { useRouter } from 'vue-router'
 import { getAuth } from 'firebase/auth'
 import { ref, onMounted } from 'vue'
+import { useSingleClick } from '~/composables/useSingleClick'
 
 const { $axios } = useNuxtApp()
+const { run, isRunning } = useSingleClick()
 
 const emit = defineEmits<{
     (e: 'onMessagePosted', message: any): void
@@ -73,35 +75,37 @@ const handleLogout = async () => {
     }
 }
 
-const sendMessage = async () => {
-    if (!content.value.trim()) return;
+const sendMessage = () => {
+    run(async () => {
+        if (!content.value.trim()) return;
 
-    const auth = getAuth()
-    const currentUser = auth.currentUser
+        const auth = getAuth()
+        const currentUser = auth.currentUser
 
-    if (!currentUser) {
-        console.error('ユーザーがログインしていません')
-        return
-    }
+        if (!currentUser) {
+            console.error('ユーザーがログインしていません')
+            return
+        }
 
-    try {
-        const idToken = await currentUser.getIdToken() // トークン取得
-        console.log('取得したトークン:', idToken)
-        
-        const res = await $axios.post('/posts', {
-            content: content.value,
-        }, {
-            headers: {
-                Authorization: `Bearer ${idToken}`,
-            },
-        })
+        try {
+            const idToken = await currentUser.getIdToken() // トークン取得
+            console.log('取得したトークン:', idToken)
 
-        const newMessage = res.data.message
-        resetForm()
-        emit('onMessagePosted', newMessage)
+            const res = await $axios.post('/posts', {
+                content: content.value,
+            }, {
+                headers: {
+                    Authorization: `Bearer ${idToken}`,
+                },
+            })
 
-    } catch (error) {
-        console.error('送信に失敗しました', error)
-    }
+            const newMessage = res.data.message
+            resetForm()
+            emit('onMessagePosted', newMessage)
+
+        } catch (error) {
+            console.error('送信に失敗しました', error)
+        }
+    })
 }
 </script>
