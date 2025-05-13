@@ -15,7 +15,7 @@
                     </form>
                 </div>
             </div>
-            <div class="message__detail-button">
+            <div class="message__detail-button" v-if="!hideDetailButton">
                 <NuxtLink :to="`/posts/${message.id}`" class="message__detail-button-link">
                     <img class="message__detail-button-img" src="/icons/detail.png" alt="detail">
                 </NuxtLink>
@@ -40,7 +40,10 @@ const props = defineProps<{
 const messages = ref([...props.messages])
 
 const router = useRouter()
-const hideDetailButton = computed(() => router.path === '/posts')
+const currentPath = computed(() => router.currentRoute.value.path)
+const hideDetailButton = computed(() =>
+    currentPath.value.startsWith('/posts/')
+)
 
 const currentUser = ref<{ uid: string } | null>(null)
 
