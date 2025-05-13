@@ -18,8 +18,8 @@
                     </div>
                 </div>
 
-                <button class="form-btn white" type="submit">
-                    ログイン
+                <button class="form-btn white" type="submit" :disabled="isRunning">
+                    {{ isRunning ? '送信中...' : 'ログイン' }}
                 </button>
             </form>
         </div>
@@ -33,6 +33,7 @@ import { useField, useForm, ErrorMessage, Field } from 'vee-validate'
 import * as yup from 'yup'
 import { ref } from 'vue'
 import { useAuth } from '~/composables/useAuth'
+import { useSingleClick } from '~/composables/useSingleClick'
 
 const validationSchema = yup.object({
     email: yup.string().required('メールアドレスは必須です'),
@@ -48,14 +49,17 @@ const { value: email } = useField('email')
 const { value: password } = useField('password')
 
 const { login } = useAuth()
+const { run, isRunning } = useSingleClick()
 
-const handleLogin = async () => {
-    try {
-        await login(email.value, password.value)
-        alert('ログイン成功')
-    } catch (e) {
-        console.error(e)
-        alert('ログインに失敗しました。再度お試しください。')
-    }
+const handleLogin = () => {
+    run(async () => {
+        try {
+            await login(email.value, password.value)
+            alert('ログイン成功')
+        } catch (e) {
+            console.error(e)
+            alert('ログインに失敗しました。再度お試しください。')
+        }
+    })
 }
 </script>

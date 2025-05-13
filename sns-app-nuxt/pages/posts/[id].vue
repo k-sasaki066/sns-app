@@ -22,7 +22,7 @@
                         <ErrorMessage name="comment" />
                     </div>
                 </div>
-                <button class="form-btn white comment-form-btn" type="submit">コメント</button>
+                <button class="form-btn white comment-form-btn" type="submit" :disabled="isRunning">{{ isRunning ? '送信中...' : 'コメント' }}</button>
             </form>
         </div>
     </main>
@@ -36,8 +36,10 @@ import { ref, onMounted } from 'vue'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
 import { useField, useForm, Field, ErrorMessage } from 'vee-validate'
 import * as yup from 'yup'
+import { useSingleClick } from '~/composables/useSingleClick'
 
 const { $axios } = useNuxtApp()
+const { run, isRunning } = useSingleClick()
 
 const route = useRoute()
 const id = route.params.id
@@ -82,33 +84,35 @@ const fetchMessages = async (idToken) => {
     }
 }
 
-const sendComment = async () => {
-    if (!comment.value.trim()) return;
+const sendComment = () => {
+    run(async () => {
+        if (!comment.value.trim()) return;
 
-    const auth = getAuth()
-    const currentUser = auth.currentUser
+        const auth = getAuth()
+        const currentUser = auth.currentUser
 
-    if (!currentUser) {
-        console.error('ユーザーがログインしていません')
-        return
-    }
+        if (!currentUser) {
+            console.error('ユーザーがログインしていません')
+            return
+        }
 
-    try {
-        const idToken = await currentUser.getIdToken() // トークン取得
-        console.log('取得したトークン:', idToken)
-        
-        const res = await $axios.post(`/posts/${id}/comments`, {
-            comment: comment.value,
-        }, {
-            headers: {
-                Authorization: `Bearer ${idToken}`,
-            },
-        })
-        resetForm()
-        await fetchMessages(idToken)
+        try {
+            const idToken = await currentUser.getIdToken() // トークン取得
+            console.log('取得したトークン:', idToken)
+            
+            const res = await $axios.post(`/posts/${id}/comments`, {
+                comment: comment.value,
+            }, {
+                headers: {
+                    Authorization: `Bearer ${idToken}`,
+                },
+            })
+            resetForm()
+            await fetchMessages(idToken)
 
-    } catch (error) {
-        console.error('送信に失敗しました', error)
-    }
+        } catch (error) {
+            console.error('送信に失敗しました', error)
+        }
+    })
 }
 </script>
