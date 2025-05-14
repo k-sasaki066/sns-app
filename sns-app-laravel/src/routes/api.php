@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\LikeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,7 +25,7 @@ Route::middleware(['firebase.auth'])->group(function () {
     Route::get('/v1/posts', [MessageController::class, 'index']);
     Route::post('/v1/posts', [MessageController::class, 'store']);
 
-    Route::post('/v1/posts/{id}/like', [MessageController::class, 'toggleFavorite']);
+    Route::post('/v1/posts/{id}/like', [LikeController::class, 'toggleFavorite']);
     Route::delete('/v1/posts/{id}', [MessageController::class, 'destroy']);
 
     Route::get('/v1/posts/{id}/comments', [CommentController::class, 'index']);
