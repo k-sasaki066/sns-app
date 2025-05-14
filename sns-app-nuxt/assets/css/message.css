@@ -63,3 +63,9 @@
     margin-left: 60px;
     flex-shrink: 0;
 }
+
+@media screen and (max-width: 959px) {
+    .message__detail-button {
+        margin-left: 48px;
+    }
+}
