@@ -17,7 +17,7 @@ class CreateCommentsTable extends Migration
             $table->id();
             $table->unsignedBigInteger('post_id')->constrained()->onDelete('cascade');;
             $table->unsignedBigInteger('user_id')->constrained()->onDelete('cascade');;
-            $table->text('comment');
+            $table->string('comment');
             $table->timestamps();
         });
     }
