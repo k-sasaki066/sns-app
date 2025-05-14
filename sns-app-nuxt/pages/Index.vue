@@ -38,14 +38,15 @@ const allLoaded = ref(false)
 const loader = ref<HTMLElement | null>(null)
 
 const fetchMessages = async () => {
-    loadingStore.setLoading(true)
     const auth = getAuth()
     const currentUser = auth.currentUser
     if (!currentUser) return
+
     const idToken = await currentUser.getIdToken()
 
     if (loading.value || allLoaded.value) return
     loading.value = true
+    loadingStore.setLoading(true)
 
     try {
         const res = await $axios.get('/posts', {
@@ -79,19 +80,16 @@ const addMessage = (newMessage: any) => {
 
 useInfiniteScroll(loader, fetchMessages)
 
-onMounted(async () => {
+onMounted(() => {
     const auth = getAuth()
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
-            fetchMessages()
+            await fetchMessages()
             // ユーザーがログインしている場合、メッセージを取得
         } else {
             router.push('/login')
         }
     })
-
-    await fetchMessages()
-    // 初期メッセージ取得
 })
 
 </script>

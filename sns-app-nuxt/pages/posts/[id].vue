@@ -97,8 +97,7 @@ const sendComment = () => {
         }
 
         try {
-            const idToken = await currentUser.getIdToken() // トークン取得
-            console.log('取得したトークン:', idToken)
+            const idToken = await currentUser.getIdToken()
             
             const res = await $axios.post(`/posts/${id}/comments`, {
                 comment: comment.value,
@@ -107,8 +106,8 @@ const sendComment = () => {
                     Authorization: `Bearer ${idToken}`,
                 },
             })
+            comments.value.push(res.data.comment)
             resetForm()
-            await fetchMessages(idToken)
 
         } catch (error) {
             console.error('送信に失敗しました', error)

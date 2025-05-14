@@ -41,6 +41,24 @@
     padding: 0;
 }
 
+.animate-pop {
+    animation: pop 0.3s ease;
+}
+
+@keyframes pop {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.4);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
 .message__detail-button {
     margin-left: 60px;
     flex-shrink: 0;
