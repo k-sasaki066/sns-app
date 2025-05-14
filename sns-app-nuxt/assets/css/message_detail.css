@@ -44,3 +44,10 @@
 .comment-form-btn {
     margin: 0 0 0 auto;
 }
+
+@media screen and (max-width: 959px) {
+
+    .comment-form {
+        width: calc(100% - 220px);
+    }
+}

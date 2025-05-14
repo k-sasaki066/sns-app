@@ -18,12 +18,17 @@ class CommentController extends Controller
      */
     public function index($id)
     {
-        $message = Post::with('user')->findOrFail($id)->append(['like_count', 'is_liked']);
+        $user = auth()->user();
 
-        $comments = Comment::where('post_id', $id)
-        ->with('user:id,name')
-        ->orderBy('created_at', 'desc')
-        ->get();
+        $message = Post::with(['user:id,name,firebase_uid', 'comments.user:id,name'])
+            ->select('id', 'user_id', 'content', 'created_at')
+            ->withCount('likes')
+            ->withExists(['likes as is_liked' => function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            }])
+            ->findOrFail($id);
+        
+        $comments = $message->comments;
 
         return response()->json([
             'messages' => [

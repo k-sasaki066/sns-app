@@ -51,19 +51,27 @@ class MessageController extends Controller
     public function index(Request $request)
     {
         try {
+            $user = auth()->user();
             $limit = $request->input('limit', 20);
             $offset = $request->input('offset', 0);
 
-            $messages = Post::with('user')
+            $messages = Post::with(['user:id,name,firebase_uid'])
+                ->select('id', 'user_id', 'content', 'created_at')
+                ->withCount('likes')
+                ->withExists(['likes as is_liked' => function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                }])
                 ->latest()
                 ->skip($offset)
                 ->take($limit)
-                ->get()
-                ->append(['like_count', 'is_liked']);
+                ->get();
 
             return response()->json([
                 'messages' => $messages->map(function ($message) {
                     $message->user->uid = $message->user->firebase_uid;
+                    $message->like_count = $message->likes_count;
+                    unset($message->likes_count);
+
                     return $message;
                 }),
             ]);
