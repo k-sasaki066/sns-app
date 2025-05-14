@@ -5,6 +5,7 @@ namespace App\Services;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Auth;
 use Illuminate\Support\Facades\Log;
+use Kreait\Firebase\Exception\Auth\UserNotFound;
 
 class FirebaseService
 {
@@ -21,6 +22,21 @@ class FirebaseService
     public function verifyToken(string $idToken)
     {
         return $this->auth->verifyIdToken($idToken);
+    }
+
+    public function getUserByUid(string $uid)
+    {
+        try {
+            $user = $this->auth->getUser($uid);
+            return [
+                'firebase_uid' => $user->uid,
+                'name' => $user->displayName ?? '匿名',
+            ];
+        } catch (UserNotFound $e) {
+            return null;
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     public function getAuth(): Auth
