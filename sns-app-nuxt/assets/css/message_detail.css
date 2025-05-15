@@ -23,6 +23,10 @@
     font-size: 18px;
 }
 
+.comment-text {
+    white-space: pre-line;
+}
+
 .comment-form {
     flex-direction: column;
     gap: 12px;

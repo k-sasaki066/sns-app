@@ -21,7 +21,7 @@
                 </NuxtLink>
             </div>
         </div>
-        <p class="message__user-name">{{ message.content }}</p>
+        <p class="message__content">{{ message.content }}</p>
     </div>
 </template>
 
