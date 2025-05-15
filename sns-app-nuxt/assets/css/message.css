@@ -10,9 +10,14 @@
     gap: 12px;
 }
 
-.message__user-name {
+.message__user-name,
+.message__content {
     word-break: break-word;
     white-space: normal;
+}
+
+.message__content {
+    white-space: pre-line;
 }
 
 .message__button-group {
