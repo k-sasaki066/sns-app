@@ -33,11 +33,20 @@ class MessageController extends Controller
                 'content' => $request->input('content'),
             ]);
 
-            $message->load('user');
+            $message = Post::with(['user:id,name,firebase_uid'])
+            ->withCount('likes')
+            ->withExists(['likes as is_liked' => function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            }])
+            ->where('id', $message->id)
+            ->first();
+            
             $message->user->uid = $message->user->firebase_uid;
+            $message->like_count = $message->likes_count;
+            unset($message->likes_count);
 
             return response()->json([
-                'message' => $message->append(['like_count', 'is_liked'])
+                'message' => $message
             ], 201);
         } catch (Exception $e) {
             Log::error('Message Store Error: ' . $e->getMessage());
