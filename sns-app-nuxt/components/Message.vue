@@ -91,7 +91,7 @@ const toggleFavorite = async (message: any) => {
 }
 
 const deleteMessage = async (message: any) => {
-    if (!confirm('このメッセージを削除しますか？')) return
+    if (!confirm(`"${message.content}"\n\nこのメッセージを削除しますか？`)) return
 
     try {
         await $axios.delete(`/posts/${message.id}`)

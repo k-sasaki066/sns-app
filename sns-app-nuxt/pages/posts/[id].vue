@@ -32,11 +32,16 @@
 import '~/assets/css/auth_form.css'
 import '~/assets/css/message_detail.css'
 import { useRouter, useRoute } from 'vue-router'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
 import { useField, useForm, Field, ErrorMessage } from 'vee-validate'
 import * as yup from 'yup'
 import { useSingleClick } from '~/composables/useSingleClick'
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+
+const config = useRuntimeConfig()
+let channel = null
 
 const { $axios } = useNuxtApp()
 const { run, isRunning } = useSingleClick()
@@ -61,13 +66,48 @@ const { value: comment } = useField('comment')
 onMounted(() => {
     const auth = getAuth()
     onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            const idToken = await user.getIdToken()
-            await fetchMessages(idToken)
-        } else {
-            console.error('ユーザーがログインしていません')
+        if (!user) {
+            return
+        }
+        const idToken = await user.getIdToken()
+        await fetchMessages(idToken)
+
+        if (!window.Echo) {
+            window.Pusher = Pusher
+            window.Echo = new Echo({
+                broadcaster: 'pusher',
+                key: config.public.PUSHER_APP_KEY,
+                cluster: config.public.PUSHER_APP_CLUSTER,
+                forceTLS: true,
+            })
+        }
+
+        if (!channel) {
+            console.log('新しいチャンネルを登録')
+            const channelName = 'post.' + id
+            channel = window.Echo.channel(channelName)
+            channel.listen('CommentSent', (event) => {
+                const newComment = event.comment
+                const exists = comments.value.some(
+                c => String(c.id) === String(newComment.id)
+                )
+                if (!exists) {
+                    comments.value.push(newComment)
+                    console.log('新しいコメントを追加しました')
+                } else {
+                    console.log('重複コメントをスキップ:', newComment)
+                }
+            })
         }
     })
+})
+
+onBeforeUnmount(() => {
+    if (channel) {
+        channel.stopListening('CommentSent')
+        window.Echo.leave('post.' + id)
+        channel = null
+    }
 })
 
 const fetchMessages = async (idToken) => {
@@ -98,7 +138,7 @@ const sendComment = () => {
 
         try {
             const idToken = await currentUser.getIdToken()
-            
+
             const res = await $axios.post(`/posts/${id}/comments`, {
                 comment: comment.value,
             }, {
@@ -106,7 +146,7 @@ const sendComment = () => {
                     Authorization: `Bearer ${idToken}`,
                 },
             })
-            comments.value.push(res.data.comment)
+            //comments.value.push(res.data.comment)
             resetForm()
 
         } catch (error) {

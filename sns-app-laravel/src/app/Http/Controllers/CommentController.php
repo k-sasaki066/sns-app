@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Post;
 use App\Models\Comment;
+use App\Events\CommentSent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Exception;
@@ -67,6 +68,8 @@ class CommentController extends Controller
                 'user_id' => $user->id,
                 'comment' => $request->comment,
             ]);
+
+            broadcast(new CommentSent($comment));
 
             return response()->json([
                 'comment' => $comment->load('user:id,name'),
