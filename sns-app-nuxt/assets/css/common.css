@@ -15,6 +15,10 @@ body {
         "ＭＳ Ｐゴシック", "MS PGothic", sans-serif;
 }
 
+button {
+    font-size: 14px;
+}
+
 NuxtLink {
     text-decoration: none;
     cursor: pointer;

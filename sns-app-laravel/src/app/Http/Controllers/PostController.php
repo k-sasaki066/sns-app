@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Exception;
 
-class MessageController extends Controller
+class PostController extends Controller
 {
     protected $firebase;
 
@@ -23,30 +23,29 @@ class MessageController extends Controller
     public function store(Request $request)
     {
         try {
-            $user = auth()->user(); // Laravelの認証情報から取得
-
+            $user = auth()->user();
             if (!$user) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 
-            $message = $user->messages()->create([
+            $post = $user->posts()->create([
                 'content' => $request->input('content'),
             ]);
 
-            $message = Post::with(['user:id,name,firebase_uid'])
+            $post = Post::with(['user:id,name,firebase_uid'])
             ->withCount('likes')
             ->withExists(['likes as is_liked' => function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             }])
-            ->where('id', $message->id)
+            ->where('id', $post->id)
             ->first();
             
-            $message->user->uid = $message->user->firebase_uid;
-            $message->like_count = $message->likes_count;
-            unset($message->likes_count);
+            $post->user->uid = $post->user->firebase_uid;
+            $post->like_count = $post->likes_count;
+            unset($post->likes_count);
 
             return response()->json([
-                'message' => $message
+                'post' => $post
             ], 201);
         } catch (Exception $e) {
             Log::error('Message Store Error: ' . $e->getMessage());
@@ -61,10 +60,14 @@ class MessageController extends Controller
     {
         try {
             $user = auth()->user();
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
             $limit = $request->input('limit', 20);
             $offset = $request->input('offset', 0);
 
-            $messages = Post::with(['user:id,name,firebase_uid'])
+            $posts = Post::with(['user:id,name,firebase_uid'])
                 ->select('id', 'user_id', 'content', 'created_at')
                 ->withCount('likes')
                 ->withExists(['likes as is_liked' => function ($query) use ($user) {
@@ -76,12 +79,12 @@ class MessageController extends Controller
                 ->get();
 
             return response()->json([
-                'messages' => $messages->map(function ($message) {
-                    $message->user->uid = $message->user->firebase_uid;
-                    $message->like_count = $message->likes_count;
-                    unset($message->likes_count);
+                'posts' => $posts->map(function ($post) {
+                    $post->user->uid = $post->user->firebase_uid;
+                    $post->like_count = $post->likes_count;
+                    unset($post->likes_count);
 
-                    return $message;
+                    return $post;
                 }),
             ]);
         } catch (Exception $e) {
@@ -97,14 +100,17 @@ class MessageController extends Controller
     {
         try {
             $user = auth()->user();
-            $message = Post::findOrFail($id);
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+            $post = Post::findOrFail($id);
 
             // メッセージの所有者と現在のユーザーが一致するか確認
-            if ($message->user_id !== $user->id) {
+            if ($post->user_id !== $user->id) {
                 return response()->json(['error' => 'Forbidden'], 403); // 自分以外のメッセージは削除できない
             }
 
-            $message->delete();
+            $post->delete();
 
             return response()->json(['success' => true]);
         } catch (ModelNotFoundException $e) {

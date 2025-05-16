@@ -3,6 +3,7 @@ import { getAuth } from 'firebase/auth'
 import type { NuxtApp } from '#app'
 
 export default defineNuxtPlugin((nuxtApp) => {
+    const router = useRouter()
     const instance = axios.create({
         baseURL: 'http://localhost/api/v1', // Laravel API のベースURL
         headers: {
@@ -19,6 +20,17 @@ export default defineNuxtPlugin((nuxtApp) => {
         }
         return config
     })
+
+    instance.interceptors.response.use(
+        response => response,
+        async (error) => {
+            if (error.response?.status === 401) {
+                alert('ログインが必要です')
+                await router.push('/login')
+            }
+            return Promise.reject(error)
+        }
+    )
 
     return {
         provide: {

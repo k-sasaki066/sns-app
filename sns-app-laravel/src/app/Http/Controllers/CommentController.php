@@ -8,6 +8,7 @@ use App\Models\Comment;
 use App\Events\CommentSent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Exception;
 
 class CommentController extends Controller
@@ -19,33 +20,43 @@ class CommentController extends Controller
      */
     public function index($id)
     {
-        $user = auth()->user();
+        try {
+            $user = auth()->user();
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
 
-        $message = Post::with(['user:id,name,firebase_uid', 'comments.user:id,name'])
-            ->select('id', 'user_id', 'content', 'created_at')
-            ->withCount('likes')
-            ->withExists(['likes as is_liked' => function ($query) use ($user) {
-                $query->where('user_id', $user->id);
-            }])
-            ->findOrFail($id);
-        
-        $comments = $message->comments;
+            $post = Post::with(['user:id,name,firebase_uid', 'comments.user:id,name'])
+                ->select('id', 'user_id', 'content', 'created_at')
+                ->withCount('likes')
+                ->withExists(['likes as is_liked' => function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                }])
+                ->findOrFail($id);
+            
+            $comments = $post->comments;
 
-        return response()->json([
-            'messages' => [
-                [
-                    'id' => $message->id,
-                    'content' => $message->content,
-                    'like_count' => $message->like_count,
-                    'is_liked' => $message->is_liked,
-                    'user' => [
-                        'name' => optional($message->user)->name ?? '匿名',
-                        'uid' => optional($message->user)->firebase_uid ?? null,
+            return response()->json([
+                'posts' => [
+                    [
+                        'id' => $post->id,
+                        'content' => $post->content,
+                        'like_count' => $post->like_count,
+                        'is_liked' => $post->is_liked,
+                        'user' => [
+                            'name' => optional($post->user)->name ?? '匿名',
+                            'uid' => optional($post->user)->firebase_uid ?? null,
+                        ],
                     ],
                 ],
-            ],
-            'comments' => $comments,
-        ]);
+                'comments' => $comments,
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Post not found'], 404);
+        } catch (Exception $e) {
+            Log::error('Comment Index Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Internal Server Error'], 500);
+        }
     }
 
     /**
@@ -58,7 +69,6 @@ class CommentController extends Controller
     {
         try {
             $user = auth()->user();
-
             if (!$user) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
@@ -81,39 +91,5 @@ class CommentController extends Controller
                 'error' => 'コメントの保存中にエラーが発生しました'
             ], 500);
         }
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
     }
 }

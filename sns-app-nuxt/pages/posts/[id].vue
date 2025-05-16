@@ -3,7 +3,7 @@
         <SideNav></SideNav>
         <div class="home-container white">
             <h2 class="home-ttl">コメント</h2>
-            <Message :messages="messages" :fetchMessages="() => fetchMessages()"></Message>
+            <Message :posts="posts" :fetchMessages="() => fetchMessages()"></Message>
 
             <div class="comment-wrap">
                 <h3 class="comment--ttl">コメント</h3>
@@ -49,7 +49,9 @@ const { run, isRunning } = useSingleClick()
 const route = useRoute()
 const id = route.params.id
 
-const messages = ref([])
+const router = useRouter()
+
+const posts = ref([])
 const comments = ref([])
 
 const validationSchema = yup.object({
@@ -67,10 +69,10 @@ onMounted(() => {
     const auth = getAuth()
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
+            await router.push('/login')
             return
         }
-        const idToken = await user.getIdToken()
-        await fetchMessages(idToken)
+        await fetchMessages()
 
         if (!window.Echo) {
             window.Pusher = Pusher
@@ -110,14 +112,10 @@ onBeforeUnmount(() => {
     }
 })
 
-const fetchMessages = async (idToken) => {
+const fetchMessages = async () => {
     try {
-        const { data } = await $axios.get(`/posts/${id}/comments`, {
-            headers: {
-                Authorization: `Bearer ${idToken}`,
-            },
-        })
-        messages.value = data.messages
+        const { data } = await $axios.get(`/posts/${id}/comments`)
+        posts.value = data.posts
         comments.value = data.comments
     } catch (error) {
         console.error('メッセージ取得失敗', error)
@@ -137,14 +135,8 @@ const sendComment = () => {
         }
 
         try {
-            const idToken = await currentUser.getIdToken()
-
             const res = await $axios.post(`/posts/${id}/comments`, {
                 comment: comment.value,
-            }, {
-                headers: {
-                    Authorization: `Bearer ${idToken}`,
-                },
             })
             //comments.value.push(res.data.comment)
             resetForm()
