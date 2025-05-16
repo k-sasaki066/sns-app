@@ -51,7 +51,7 @@ class PostController extends Controller
             Log::error('Message Store Error: ' . $e->getMessage());
 
             return response()->json([
-                'error' => 'メッセージの保存中にエラーが発生しました'
+                'error' => '問題が発生しました。時間を置いて再度お試しください。'
             ], 500);
         }
     }
@@ -91,7 +91,7 @@ class PostController extends Controller
             Log::error('Failed to fetch messages: ' . $e->getMessage());
 
             return response()->json([
-                'error' => 'メッセージの取得中にエラーが発生しました'
+                'error' => '問題が発生しました。時間を置いて再度お試しください。'
             ], 500);
         }
     }
@@ -120,7 +120,7 @@ class PostController extends Controller
         } catch (Exception $e) {
             Log::error('Message delete error: ' . $e->getMessage());
 
-            return response()->json(['error' => 'メッセージの削除中にエラーが発生しました'], 500);
+            return response()->json(['error' => '問題が発生しました。時間を置いて再度お試しください。'], 500);
         }
     }
 }

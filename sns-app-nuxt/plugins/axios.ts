@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { getAuth } from 'firebase/auth'
+import { useErrorStore } from '~/stores/error'
 import type { NuxtApp } from '#app'
 
 export default defineNuxtPlugin((nuxtApp) => {
@@ -24,9 +25,19 @@ export default defineNuxtPlugin((nuxtApp) => {
     instance.interceptors.response.use(
         response => response,
         async (error) => {
-            if (error.response?.status === 401) {
+            const errorStore = useErrorStore()
+            const status = error.response?.status || 500
+            const message = error.response?.data?.error || error.message || '不明なエラーが発生しました'
+
+            errorStore.setError(message, status)
+
+            if (status === 401) {
                 alert('ログインが必要です')
                 await router.push('/login')
+            } else {
+                await router.push({
+                    path: '/error',
+                })
             }
             return Promise.reject(error)
         }

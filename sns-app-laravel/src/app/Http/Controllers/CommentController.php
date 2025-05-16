@@ -38,24 +38,23 @@ class CommentController extends Controller
 
             return response()->json([
                 'posts' => [
-                    [
-                        'id' => $post->id,
-                        'content' => $post->content,
-                        'like_count' => $post->like_count,
-                        'is_liked' => $post->is_liked,
-                        'user' => [
-                            'name' => optional($post->user)->name ?? '匿名',
-                            'uid' => optional($post->user)->firebase_uid ?? null,
-                        ],
+                    'id' => $post->id,
+                    'content' => $post->content,
+                    'like_count' => $post->likes_count,
+                    'is_liked' => $post->is_liked,
+                    'created_at' => $post->created_at,
+                    'user' => [
+                        'name' => optional($post->user)->name ?? '匿名',
+                        'uid' => optional($post->user)->firebase_uid ?? null,
                     ],
                 ],
                 'comments' => $comments,
             ]);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Post not found'], 404);
+            return response()->json(['error' => 'Page not found'], 404);
         } catch (Exception $e) {
             Log::error('Comment Index Error: ' . $e->getMessage());
-            return response()->json(['error' => 'Internal Server Error'], 500);
+            return response()->json(['error' => '問題が発生しました。時間を置いて再度お試しください。'], 500);
         }
     }
 
@@ -88,7 +87,7 @@ class CommentController extends Controller
             Log::error('Comment Store Error: ' . $e->getMessage());
 
             return response()->json([
-                'error' => 'コメントの保存中にエラーが発生しました'
+                'error' => '問題が発生しました。時間を置いて再度お試しください。'
             ], 500);
         }
     }
