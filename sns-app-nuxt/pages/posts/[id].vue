@@ -3,7 +3,7 @@
         <SideNav></SideNav>
         <div class="home-container white">
             <h2 class="home-ttl">コメント</h2>
-            <Message :posts="posts" :fetchMessages="() => fetchMessages()"></Message>
+            <Message :posts="[posts]" :fetchMessages="() => fetchMessages()"></Message>
 
             <div class="comment-wrap">
                 <h3 class="comment--ttl">コメント</h3>

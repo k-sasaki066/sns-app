@@ -53,7 +53,7 @@ class LikeController extends Controller
         } catch (Exception $e) {
             DB::rollBack(); // エラー時にロールバック
             Log::error('Toggle Favorite Error: ' . $e->getMessage());
-            return response()->json(['error' => 'Internal Server Error'], 500);
+            return response()->json(['error' => '問題が発生しました。時間を置いて再度お試しください。'], 500);
         }
     }
 }

@@ -16,8 +16,14 @@
     white-space: normal;
 }
 
+.message__user-name {
+    font-weight: bold;
+    font-size: 20px;
+}
+
 .message__content {
     white-space: pre-line;
+    line-height: 1.3em;
 }
 
 .message__button-group {
