@@ -4,7 +4,7 @@
         <div class="home-container white">
             <h2 class="home-ttl">ホーム</h2>
             <div class="message-container">
-                <Message :messages="messages" :fetchMessages="fetchMessages"></Message>
+                <Message :posts="posts" :fetchMessages="fetchMessages"></Message>
                 <div class="loading-trigger" ref="loader"></div>
             </div>
         </div>
@@ -30,7 +30,7 @@ const router = useRouter()
 
 const loadingStore = useLoadingStore()
 
-const messages = ref<any[]>([]);
+const posts = ref<any[]>([]);
 const offset = ref(0)
 const limit = 20
 const loading = ref(false)
@@ -42,29 +42,24 @@ const fetchMessages = async () => {
     const currentUser = auth.currentUser
     if (!currentUser) return
 
-    const idToken = await currentUser.getIdToken()
-
     if (loading.value || allLoaded.value) return
     loading.value = true
     loadingStore.setLoading(true)
 
     try {
         const res = await $axios.get('/posts', {
-            headers: {
-                Authorization: `Bearer ${idToken}`,
-            },
             params: {
                 offset: offset.value,
                 limit,
             },
         })
-        const newMessages = res.data.messages
-        if (newMessages.length < limit) {
+        const newPosts = res.data.posts
+        if (newPosts.length < limit) {
             allLoaded.value = true
         }
 
-        messages.value = [...messages.value, ...newMessages]
-        offset.value += newMessages.length
+        posts.value = [...posts.value, ...newPosts]
+        offset.value += newPosts.length
     } catch (error) {
         console.error('メッセージ取得に失敗しました', error)
     } finally {
@@ -74,8 +69,8 @@ const fetchMessages = async () => {
 }
 
 // 子コンポーネントから emit されたときの追加処理
-const addMessage = (newMessage: any) => {
-    messages.value.unshift(newMessage)
+const addMessage = (newPost: any) => {
+    posts.value.unshift(newPost)
 }
 
 useInfiniteScroll(loader, fetchMessages)
@@ -85,11 +80,9 @@ onMounted(() => {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             await fetchMessages()
-            // ユーザーがログインしている場合、メッセージを取得
         } else {
             router.push('/login')
         }
     })
 })
-
 </script>

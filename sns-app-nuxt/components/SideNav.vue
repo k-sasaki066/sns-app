@@ -49,7 +49,7 @@ const { $axios } = useNuxtApp()
 const { run, isRunning } = useSingleClick()
 
 const emit = defineEmits<{
-    (e: 'onMessagePosted', message: any): void
+    (e: 'onMessagePosted', post: any): void
 }>()
 const router = useRouter()
 const { logout } = useAuth()
@@ -88,20 +88,13 @@ const sendMessage = () => {
         }
 
         try {
-            const idToken = await currentUser.getIdToken() // トークン取得
-            console.log('取得したトークン:', idToken)
-
             const res = await $axios.post('/posts', {
                 content: content.value,
-            }, {
-                headers: {
-                    Authorization: `Bearer ${idToken}`,
-                },
             })
 
-            const newMessage = res.data.message
+            const newPost = res.data.post
             resetForm()
-            emit('onMessagePosted', newMessage)
+            emit('onMessagePosted', newPost)
 
         } catch (error) {
             console.error('送信に失敗しました', error)
