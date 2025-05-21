@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use App\Models\Post;
 use App\Services\FirebaseService;
@@ -26,6 +27,16 @@ class PostController extends Controller
             $user = auth()->user();
             if (!$user) {
                 return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'comment' => 'required|string|max:120',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'error' => 'コメント送信中にエラーが発生しました。',
+                ], 422);
             }
 
             $post = $user->posts()->create([

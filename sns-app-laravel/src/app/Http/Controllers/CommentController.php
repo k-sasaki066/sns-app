@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use App\Models\Post;
 use App\Models\Comment;
 use App\Events\CommentSent;
@@ -70,6 +71,16 @@ class CommentController extends Controller
             $user = auth()->user();
             if (!$user) {
                 return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'comment' => 'required|string|max:120',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'error' => 'コメント送信中にエラーが発生しました。',
+                ], 422);
             }
 
             $comment = Comment::create([
