@@ -39,6 +39,9 @@ import * as yup from 'yup'
 import { useSingleClick } from '~/composables/useSingleClick'
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import { useLoadingStore } from '~/stores/useLoadingStore'
+import { useCommentFormStore } from '~/stores/commentFormStore'
+
 
 const config = useRuntimeConfig()
 let channel = null
@@ -51,22 +54,37 @@ const id = route.params.id
 
 const router = useRouter()
 
+const loadingStore = useLoadingStore()
+
 const posts = ref([])
 const comments = ref([])
 
+const commentFormStore = useCommentFormStore()
+
 const validationSchema = yup.object({
-    comment: yup.string().required('コメントは必須です').max(120, 'コメントは120文字以内で入力してください'),
+    comment: yup
+        .string()
+        .required('コメントは必須です')
+        .max(120, 'コメントは120文字以内で入力してください'),
 })
 
-const { resetForm } = useForm({
+const { handleSubmit, validate, resetForm } = useForm({
     validationSchema,
     validateOnMount: false
 })
 
-const { value: comment } = useField('comment')
+//const { value: comment } = useField('comment')
+const { value: comment } = useField('comment', undefined, {
+    validateOnMount: false,
+})
 
 onMounted(() => {
     const auth = getAuth()
+    const savedComment = commentFormStore.getContent(id)
+    if (savedComment) {
+        comment.value = savedComment
+    }
+    //comment.value = commentFormStore.getContent(id)
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
             await router.push('/login')
@@ -114,17 +132,27 @@ onBeforeUnmount(() => {
 
 const fetchMessages = async () => {
     try {
+        loadingStore.setLoading(true)
         const { data } = await $axios.get(`/posts/${id}/comments`)
         posts.value = data.posts
         comments.value = data.comments
     } catch (error) {
         console.error('メッセージ取得失敗', error)
+    } finally {
+        loadingStore.setLoading(false) // ← ここでローディング終了
     }
 }
 
+watch(comment, (newVal) => {
+    commentFormStore.setContent(id, newVal)
+})
+
 const sendComment = () => {
     run(async () => {
-        if (!comment.value.trim()) return;
+        const result = await validate()
+        if (!result.valid) {
+            return // バリデーションエラーがある場合は送信中止
+        }
 
         const auth = getAuth()
         const currentUser = auth.currentUser
@@ -140,6 +168,7 @@ const sendComment = () => {
             })
             //comments.value.push(res.data.comment)
             resetForm()
+            commentFormStore.setContent(id, '')
 
         } catch (error) {
             console.error('送信に失敗しました', error)

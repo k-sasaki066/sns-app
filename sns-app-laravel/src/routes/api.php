@@ -24,9 +24,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::middleware(['firebase.auth'])->group(function () {
     Route::get('/v1/posts', [PostController::class, 'index']);
     Route::post('/v1/posts', [PostController::class, 'store']);
+    Route::delete('/v1/posts/{id}', [PostController::class, 'destroy']);
 
     Route::post('/v1/posts/{id}/like', [LikeController::class, 'toggleFavorite']);
-    Route::delete('/v1/posts/{id}', [PostController::class, 'destroy']);
 
     Route::get('/v1/posts/{id}/comments', [CommentController::class, 'index']);
     Route::post('/v1/posts/{id}/comments', [CommentController::class, 'store']);

@@ -55,10 +55,13 @@ const router = useRouter()
 const { logout } = useAuth()
 
 const validationSchema = yup.object({
-    content: yup.string().required('投稿メッセージは必須です').max(120, '投稿メッセージは120文字以内で入力してください'),
+    content: yup
+        .string()
+        .required('投稿メッセージは必須です')
+        .max(120, '投稿メッセージは120文字以内で入力してください'),
 })
 
-const { resetForm } = useForm({
+const { handleSubmit, validate, resetForm } = useForm({
     validationSchema,
     validateOnMount: false
 })
@@ -77,7 +80,10 @@ const handleLogout = async () => {
 
 const sendMessage = () => {
     run(async () => {
-        if (!content.value.trim()) return;
+        const result = await validate()
+        if (!result.valid) {
+            return // バリデーションエラーがある場合は送信中止
+        }
 
         const auth = getAuth()
         const currentUser = auth.currentUser
