@@ -35,7 +35,6 @@
 </template>
 
 <script setup>
-import '~/assets/css/auth_form.css'
 import { useField, useForm, Field, ErrorMessage, } from 'vee-validate'
 import * as yup from 'yup'
 import { useAuth } from '~/composables/useAuth'

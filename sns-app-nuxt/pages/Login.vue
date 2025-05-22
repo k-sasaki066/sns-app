@@ -27,8 +27,6 @@
 </template>
 
 <script setup>
-import '~/assets/css/auth_form.css'
-
 import { useField, useForm, ErrorMessage, Field } from 'vee-validate'
 import * as yup from 'yup'
 import { ref } from 'vue'
