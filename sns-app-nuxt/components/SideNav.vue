@@ -37,16 +37,21 @@
 </template>
 
 <script setup lang="ts">
-import '~/assets/css/side_nav.css'
 import { useField, useForm, Field, ErrorMessage } from 'vee-validate'
-import * as yup from 'yup'
 import { useRouter } from 'vue-router'
-import { getAuth } from 'firebase/auth'
 import { ref, onMounted } from 'vue'
 import { useSingleClick } from '~/composables/useSingleClick'
+import { useCurrentUser } from '~/composables/useCurrentUser'
+import { createMessageSchema } from '~/composables/validations/messageValidation'
+import { useAuth } from '~/composables/useAuth'
+import { usePostApi } from '~/composables/api/usePostApi'
+import { usePostFormStore } from '~/stores/postFormStore'
 
-const { $axios } = useNuxtApp()
+const { createPost } = usePostApi()
+const postFormStore = usePostFormStore()
 const { run, isRunning } = useSingleClick()
+
+const { currentUser, currentUid } = useCurrentUser()
 
 const emit = defineEmits<{
     (e: 'onMessagePosted', post: any): void
@@ -54,15 +59,8 @@ const emit = defineEmits<{
 const router = useRouter()
 const { logout } = useAuth()
 
-const validationSchema = yup.object({
-    content: yup
-        .string()
-        .required('投稿メッセージは必須です')
-        .max(120, '投稿メッセージは120文字以内で入力してください'),
-})
-
 const { handleSubmit, validate, resetForm } = useForm({
-    validationSchema,
+    validationSchema: createMessageSchema('content', '投稿メッセージ'),
     validateOnMount: false
 })
 
@@ -78,6 +76,17 @@ const handleLogout = async () => {
     }
 }
 
+onMounted(() => {
+    const savedPost = postFormStore.getContent()
+    if (savedPost) {
+        content.value = savedPost
+    }
+})
+
+watch(content, (newVal) => {
+    postFormStore.setContent(newVal)
+})
+
 const sendMessage = () => {
     run(async () => {
         const result = await validate()
@@ -85,22 +94,16 @@ const sendMessage = () => {
             return // バリデーションエラーがある場合は送信中止
         }
 
-        const auth = getAuth()
-        const currentUser = auth.currentUser
-
         if (!currentUser) {
             console.error('ユーザーがログインしていません')
             return
         }
 
         try {
-            const res = await $axios.post('/posts', {
-                content: content.value,
-            })
-
-            const newPost = res.data.post
+            const newPost = await createPost(content.value)
             resetForm()
             emit('onMessagePosted', newPost)
+            postFormStore.clearContent()
 
         } catch (error) {
             console.error('送信に失敗しました', error)

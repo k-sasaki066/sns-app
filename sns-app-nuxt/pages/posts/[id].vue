@@ -29,97 +29,83 @@
 </template>
 
 <script setup>
-import '~/assets/css/auth_form.css'
-import '~/assets/css/message_detail.css'
 import { useRouter, useRoute } from 'vue-router'
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { getAuth, onAuthStateChanged } from 'firebase/auth'
 import { useField, useForm, Field, ErrorMessage } from 'vee-validate'
-import * as yup from 'yup'
 import { useSingleClick } from '~/composables/useSingleClick'
+import { useCurrentUser } from '~/composables/useCurrentUser'
+import { waitForAuthReady } from '~/composables/useAuthReady'
+import { createMessageSchema } from '~/composables/validations/messageValidation'
+import { useCommentApi } from '~/composables/api/comments'
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import { useLoadingStore } from '~/stores/useLoadingStore'
 import { useCommentFormStore } from '~/stores/commentFormStore'
 
-
 const config = useRuntimeConfig()
 let channel = null
 
-const { $axios } = useNuxtApp()
 const { run, isRunning } = useSingleClick()
 
 const route = useRoute()
 const id = route.params.id
 
 const router = useRouter()
+const { currentUser, currentUid, authStore } = useCurrentUser()
 
 const loadingStore = useLoadingStore()
+const commentFormStore = useCommentFormStore()
+const { fetchComments, postComment } = useCommentApi()
 
 const posts = ref([])
 const comments = ref([])
 
-const commentFormStore = useCommentFormStore()
-
-const validationSchema = yup.object({
-    comment: yup
-        .string()
-        .required('コメントは必須です')
-        .max(120, 'コメントは120文字以内で入力してください'),
-})
-
 const { handleSubmit, validate, resetForm } = useForm({
-    validationSchema,
+    validationSchema: createMessageSchema('comment', 'コメント'),
     validateOnMount: false
 })
 
-//const { value: comment } = useField('comment')
 const { value: comment } = useField('comment', undefined, {
     validateOnMount: false,
 })
 
-onMounted(() => {
-    const auth = getAuth()
+onMounted(async () => {
     const savedComment = commentFormStore.getContent(id)
     if (savedComment) {
         comment.value = savedComment
     }
-    //comment.value = commentFormStore.getContent(id)
-    onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-            await router.push('/login')
-            return
-        }
-        await fetchMessages()
 
-        if (!window.Echo) {
-            window.Pusher = Pusher
-            window.Echo = new Echo({
-                broadcaster: 'pusher',
-                key: config.public.PUSHER_APP_KEY,
-                cluster: config.public.PUSHER_APP_CLUSTER,
-                forceTLS: true,
-            })
-        }
+    await waitForAuthReady()
 
-        if (!channel) {
-            console.log('新しいチャンネルを登録')
-            const channelName = 'post.' + id
-            channel = window.Echo.channel(channelName)
-            channel.listen('CommentSent', (event) => {
-                const newComment = event.comment
-                const exists = comments.value.some(
-                c => String(c.id) === String(newComment.id)
-                )
-                if (!exists) {
-                    comments.value.push(newComment)
-                    console.log('新しいコメントを追加しました')
-                } else {
-                    console.log('重複コメントをスキップ:', newComment)
-                }
-            })
-        }
-    })
+    await fetchMessages()
+
+    if (!window.Echo) {
+        window.Pusher = Pusher
+        window.Echo = new Echo({
+            broadcaster: 'pusher',
+            key: config.public.PUSHER_APP_KEY,
+            cluster: config.public.PUSHER_APP_CLUSTER,
+            forceTLS: true,
+        })
+    }
+
+    if (!channel) {
+        console.log('新しいチャンネルを登録')
+        const channelName = 'post.' + id
+        channel = window.Echo.channel(channelName)
+        channel.listen('CommentSent', (event) => {
+            const newComment = event.comment
+            const exists = comments.value.some(
+            c => String(c.id) === String(newComment.id)
+            )
+            if (!exists) {
+                comments.value.push(newComment)
+                console.log('新しいコメントを追加しました')
+            } else {
+                console.log('重複コメントをスキップ:', newComment)
+            }
+        })
+    }
 })
 
 onBeforeUnmount(() => {
@@ -133,7 +119,7 @@ onBeforeUnmount(() => {
 const fetchMessages = async () => {
     try {
         loadingStore.setLoading(true)
-        const { data } = await $axios.get(`/posts/${id}/comments`)
+        const { data } = await fetchComments(id)
         posts.value = data.posts
         comments.value = data.comments
     } catch (error) {
@@ -154,19 +140,13 @@ const sendComment = () => {
             return // バリデーションエラーがある場合は送信中止
         }
 
-        const auth = getAuth()
-        const currentUser = auth.currentUser
-
         if (!currentUser) {
             console.error('ユーザーがログインしていません')
             return
         }
 
         try {
-            const res = await $axios.post(`/posts/${id}/comments`, {
-                comment: comment.value,
-            })
-            //comments.value.push(res.data.comment)
+            await postComment(id, comment.value)
             resetForm()
             commentFormStore.setContent(id, '')
 

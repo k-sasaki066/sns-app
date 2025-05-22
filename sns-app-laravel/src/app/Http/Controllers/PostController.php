@@ -30,7 +30,7 @@ class PostController extends Controller
             }
 
             $validator = Validator::make($request->all(), [
-                'comment' => 'required|string|max:120',
+                'content' => 'required|string|max:120',
             ]);
 
             if ($validator->fails()) {

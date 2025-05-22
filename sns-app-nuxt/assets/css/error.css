@@ -1,6 +1,7 @@
 .error-wrap {
     margin: 128px auto;
     text-align: center;
+    padding: 20px;
 }
 
 .error-status {

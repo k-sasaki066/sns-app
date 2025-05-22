@@ -12,18 +12,19 @@
 </template>
 
 <script setup lang="ts">
-import '~/assets/css/auth_form.css'
-import '~/assets/css/index.css'
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, computed } from 'vue'
 import Message from '~/components/Message.vue'
 import SideNav from '~/components/SideNav.vue'
 import { useRouter } from 'vue-router'
-import { getAuth, onAuthStateChanged } from 'firebase/auth'
 import { useInfiniteScroll } from '~/composables/useInfiniteScroll'
+import { useCurrentUser } from '~/composables/useCurrentUser'
+import { waitForAuthReady } from '~/composables/useAuthReady'
+import { usePostApi } from '~/composables/api/usePostApi'
+const { fetchPosts } = usePostApi()
 import { useLoadingStore } from '~/stores/useLoadingStore'
 
-// Nuxt のプラグインで登録した axios を取得
-const { $axios } = useNuxtApp()
+const { currentUser, currentUid, authStore } = useCurrentUser()
+console.log(currentUser)
 
 // useRouter を使ってページ遷移を制御
 const router = useRouter()
@@ -38,22 +39,12 @@ const allLoaded = ref(false)
 const loader = ref<HTMLElement | null>(null)
 
 const fetchMessages = async () => {
-    const auth = getAuth()
-    const currentUser = auth.currentUser
-    if (!currentUser) return
-
     if (loading.value || allLoaded.value) return
     loading.value = true
     loadingStore.setLoading(true)
 
     try {
-        const res = await $axios.get('/posts', {
-            params: {
-                offset: offset.value,
-                limit,
-            },
-        })
-        const newPosts = res.data.posts
+        const newPosts = await fetchPosts(offset.value, limit)
         if (newPosts.length < limit) {
             allLoaded.value = true
         }
@@ -73,16 +64,16 @@ const addMessage = (newPost: any) => {
     posts.value.unshift(newPost)
 }
 
-useInfiniteScroll(loader, fetchMessages)
+//useInfiniteScroll(loader, fetchMessages)
+useInfiniteScroll(loader, async () => {
+    await waitForAuthReady()
 
-onMounted(() => {
-    const auth = getAuth()
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            await fetchMessages()
-        } else {
-            router.push('/login')
-        }
-    })
+    await fetchMessages()
+})
+
+onMounted(async () => {
+    await waitForAuthReady()
+
+    await fetchMessages()
 })
 </script>

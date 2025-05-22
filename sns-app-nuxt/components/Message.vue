@@ -26,12 +26,13 @@
 </template>
 
 <script setup lang="ts">
-import '~/assets/css/message.css'
 import { computed, watch, ref, onMounted, defineProps } from 'vue'
-import { getAuth, onAuthStateChanged } from 'firebase/auth'
 import { useRouter } from 'vue-router'
+import { useCurrentUser } from '~/composables/useCurrentUser'
+import { usePostApi } from '~/composables/api/usePostApi'
+const { toggleLike, deletePost } = usePostApi()
 
-const { $axios } = useNuxtApp()
+const { currentUser, currentUid, authStore } = useCurrentUser()
 
 const props = defineProps<{
     posts: any[]
@@ -44,18 +45,6 @@ const currentPath = computed(() => router.currentRoute.value.path)
 const hideDetailButton = computed(() =>
     currentPath.value.startsWith('/posts/')
 )
-
-const currentUser = ref<{ uid: string } | null>(null)
-
-onMounted(() => {
-    const auth = getAuth()
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            const user = auth.currentUser
-            currentUser.value = { uid: user.uid }
-        }
-    })
-})
 
 watch(() => props.posts, (newPosts) => {
     posts.value = newPosts
@@ -72,14 +61,14 @@ const toggleFavorite = async (post: any) => {
     post.animate = true
 
     try {
-        const res = await $axios.post(`/posts/${post.id}/like`)
+        const res = await toggleLike(post.id)
 
-        if (!res.data.success) {
+        if (!res.success) {
         throw new Error('操作に失敗しました')
         }
 
-        post.is_liked = res.data.is_liked
-        post.like_count = res.data.like_count
+        post.is_liked = res.is_liked
+        post.like_count = res.like_count
 
     } catch (e) {
         post.is_liked = wasLiked
@@ -94,7 +83,7 @@ const deleteMessage = async (post: any) => {
     if (!confirm(`"${post.content}"\n\nこのメッセージを削除しますか？`)) return
 
     try {
-        await $axios.delete(`/posts/${post.id}`)
+        await deletePost(post.id)
         // 即時UIから削除
         posts.value = posts.value.filter(m => m.id !== post.id)
         router.push('/')
