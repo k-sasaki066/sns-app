@@ -24,7 +24,6 @@ const { fetchPosts } = usePostApi()
 import { useLoadingStore } from '~/stores/useLoadingStore'
 
 const { currentUser, currentUid, authStore } = useCurrentUser()
-console.log(currentUser)
 
 // useRouter を使ってページ遷移を制御
 const router = useRouter()
